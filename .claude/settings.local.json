@@ -20,7 +20,21 @@
       "Bash(curl -s https://api.supabase.com/v1/projects/nrrijqoqigtqztqxmefu/types/typescript -H 'Authorization: Bearer __CMDSUB_OUTPUT__')",
       "Bash(npx supabase@latest gen types typescript --project-id nrrijqoqigtqztqxmefu)",
       "Bash(git init *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit -m 'feat: initial Workify app — Phase 1 + Phase 2 *)",
+      "Bash(git config *)",
+      "Bash(git remote *)",
+      "Bash(git push *)",
+      "Bash(vercel --version)",
+      "Bash(vercel --yes --env NEXT_PUBLIC_SUPABASE_URL=https://nrrijqoqigtqztqxmefu.supabase.co --env NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ycmlqcW9xaWd0cXp0cXhtZWZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNzgxNDEsImV4cCI6MjA5Mjg1NDE0MX0.oW9_pZUL5oNBNrYHLlyD_2JHQkJnh3C4TEcOvqjR0FU --env SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ycmlqcW9xaWd0cXp0cXhtZWZ1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzI3ODE0MSwiZXhwIjoyMDkyODU0MTQxfQ.uqJO11I39VcY0Ibxv9fQCGP5zYTc6p4JyVBYcNZ1Tfg --env NEXT_PUBLIC_APP_URL=https://workify.vercel.app)",
+      "Bash(vercel login *)",
+      "Bash(vercel --yes)",
+      "Bash(vercel --yes --name workify)",
+      "Bash(vercel env *)",
+      "Bash(vercel --prod)",
+      "Bash(npx tsc *)",
+      "Bash(npx next *)",
+      "Bash(git commit *)"
     ]
   }
 }

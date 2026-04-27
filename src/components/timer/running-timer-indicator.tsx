@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useTransition } from "react";
 import Link from "next/link";
-import { Timer, Square } from "lucide-react";
+import { Timer, Square, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { stopTimer } from "@/lib/actions/time-entries";
 
 interface RunningTimer {
   id: string;
@@ -32,6 +33,7 @@ function formatElapsed(startedAt: string): string {
 export function RunningTimerIndicator() {
   const [timer, setTimer] = useState<RunningTimer | null>(null);
   const [elapsed, setElapsed] = useState("");
+  const [isPending, startTransition] = useTransition();
   const supabase = createClient();
 
   const fetchTimer = useCallback(async () => {
@@ -77,18 +79,17 @@ export function RunningTimerIndicator() {
     return () => clearInterval(interval);
   }, [timer]);
 
-  async function stopTimer() {
+  function handleStop() {
     if (!timer) return;
-    const { error } = await supabase
-      .from("time_entries")
-      .update({ ended_at: new Date().toISOString() } as never)
-      .eq("id", timer.id);
-    if (error) {
-      toast.error("Timer konnte nicht gestoppt werden.");
-    } else {
-      setTimer(null);
-      toast.success("Timer gestoppt.");
-    }
+    startTransition(async () => {
+      try {
+        await stopTimer(timer.id, timer.task_id);
+        setTimer(null);
+        toast.success("Timer gestoppt.");
+      } catch {
+        toast.error("Timer konnte nicht gestoppt werden.");
+      }
+    });
   }
 
   if (!timer) return null;
@@ -109,10 +110,11 @@ export function RunningTimerIndicator() {
         variant="ghost"
         size="icon"
         className="h-6 w-6 text-amber-700 hover:text-amber-900 hover:bg-amber-100 dark:text-amber-300 dark:hover:bg-amber-900 shrink-0"
-        onClick={stopTimer}
+        onClick={handleStop}
+        disabled={isPending}
         title="Timer stoppen"
       >
-        <Square className="h-3 w-3 fill-current" />
+        {isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Square className="h-3 w-3 fill-current" />}
       </Button>
     </div>
   );
