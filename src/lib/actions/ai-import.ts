@@ -1,7 +1,5 @@
 "use server";
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
 export interface ExtractedTask {
   title: string;
   description: string;
@@ -27,11 +25,19 @@ Antworte NUR mit einem gültigen JSON-Array, kein anderer Text:
   }
 ]`;
 
+function parseGeminiResponse(raw: string): ExtractedTask[] {
+  const jsonMatch = raw.trim().match(/\[[\s\S]*\]/);
+  if (!jsonMatch) throw new Error("Gemini hat kein gültiges JSON zurückgegeben.");
+  return JSON.parse(jsonMatch[0]) as ExtractedTask[];
+}
+
 export async function extractTasksFromText(text: string): Promise<ExtractedTask[]> {
   const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
   if (!apiKey) throw new Error("GOOGLE_GEMINI_API_KEY nicht konfiguriert.");
 
   try {
+    // Dynamic import prevents top-level module issues in the server bundle
+    const { GoogleGenerativeAI } = await import("@google/generative-ai");
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
@@ -41,10 +47,7 @@ export async function extractTasksFromText(text: string): Promise<ExtractedTask[
       text,
     ]);
 
-    const raw = result.response.text().trim();
-    const jsonMatch = raw.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) throw new Error("Gemini hat kein gültiges JSON zurückgegeben.");
-    return JSON.parse(jsonMatch[0]) as ExtractedTask[];
+    return parseGeminiResponse(result.response.text());
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     throw new Error(`KI-Analyse fehlgeschlagen: ${msg}`);
@@ -60,6 +63,7 @@ export async function extractTasksFromImage(
   if (!apiKey) throw new Error("GOOGLE_GEMINI_API_KEY nicht konfiguriert.");
 
   try {
+    const { GoogleGenerativeAI } = await import("@google/generative-ai");
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
@@ -70,10 +74,7 @@ export async function extractTasksFromImage(
     ];
 
     const result = await model.generateContent(parts);
-    const raw = result.response.text().trim();
-    const jsonMatch = raw.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) throw new Error("Gemini hat kein gültiges JSON zurückgegeben.");
-    return JSON.parse(jsonMatch[0]) as ExtractedTask[];
+    return parseGeminiResponse(result.response.text());
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     throw new Error(`KI-Analyse fehlgeschlagen: ${msg}`);
