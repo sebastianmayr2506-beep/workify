@@ -89,6 +89,22 @@ export async function updateTask(id: string, formData: Partial<TaskFormData> & {
   return data;
 }
 
+export async function getTasksForToday() {
+  const { supabase, user } = await getUser();
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+  const { data, error } = await supabase
+    .from("tasks")
+    .select("id, title, status, priority, due_date, customer_id, project_id, half_billing, customers(id, name), projects(id, name)")
+    .eq("user_id", user.id)
+    .neq("status", "done")
+    .or(`due_date.lte.${today},status.eq.in_progress,status.eq.waiting`)
+    .order("priority", { ascending: false })
+    .order("due_date", { ascending: true, nullsFirst: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function updateTaskStatus(id: string, status: "open" | "in_progress" | "waiting" | "done") {
   const { supabase, user } = await getUser();
   const completed_at = status === "done" ? new Date().toISOString() : null;

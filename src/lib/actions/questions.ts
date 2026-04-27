@@ -57,6 +57,17 @@ export async function getOpenQuestionsForMeeting(customerId: string) {
   return (data ?? []).map((q) => ({ ...q, tasks: null }));
 }
 
+export async function getOpenQuestionsCount() {
+  const { supabase, user } = await getUser();
+  const { count, error } = await supabase
+    .from("questions")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .eq("status", "open");
+  if (error) throw error;
+  return count ?? 0;
+}
+
 export async function createQuestion(formData: QuestionFormData) {
   const { supabase, user } = await getUser();
   const { data, error } = await supabase

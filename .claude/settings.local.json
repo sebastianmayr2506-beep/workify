@@ -34,7 +34,8 @@
       "Bash(vercel --prod)",
       "Bash(npx tsc *)",
       "Bash(npx next *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(vercel deploy *)"
     ]
   }
 }
