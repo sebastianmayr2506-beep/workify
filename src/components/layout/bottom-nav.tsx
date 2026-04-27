@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { House, Users, MessageCircleQuestion, LayoutTemplate, BarChart2 } from "lucide-react";
+import { LayoutDashboard, Users, MessageCircleQuestion, LayoutTemplate, BarChart2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NAV_LINKS } from "./nav-links";
 
 const ICON_MAP = {
-  House,
+  LayoutDashboard,
   Users,
   MessageCircleQuestion,
   LayoutTemplate,

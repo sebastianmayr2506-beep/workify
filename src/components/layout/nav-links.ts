@@ -1,5 +1,5 @@
 export const NAV_LINKS = [
-  { href: "/", label: "Heute", icon: "House", shortcut: "g h" },
+  { href: "/", label: "Dashboard", icon: "LayoutDashboard", shortcut: "g d" },
   { href: "/customers", label: "Kunden", icon: "Users", shortcut: "g k" },
   { href: "/questions", label: "Fragen", icon: "MessageCircleQuestion", shortcut: "g f" },
   { href: "/templates", label: "Templates", icon: "LayoutTemplate", shortcut: null },

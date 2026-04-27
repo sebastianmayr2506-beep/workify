@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  House,
+  LayoutDashboard,
   Users,
   MessageCircleQuestion,
   LayoutTemplate,
@@ -16,7 +16,7 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 
 const ICON_MAP = {
-  House,
+  LayoutDashboard,
   Users,
   MessageCircleQuestion,
   LayoutTemplate,
