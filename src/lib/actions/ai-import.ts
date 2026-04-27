@@ -25,29 +25,47 @@ Antworte NUR mit einem gültigen JSON-Array, kein anderer Text:
   }
 ]`;
 
-function parseGeminiResponse(raw: string): ExtractedTask[] {
+const GEMINI_URL =
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+
+async function callGemini(
+  parts: { text?: string; inlineData?: { mimeType: string; data: string } }[]
+): Promise<ExtractedTask[]> {
+  const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GOOGLE_GEMINI_API_KEY nicht konfiguriert.");
+
+  const body = {
+    contents: [{ parts }],
+    generationConfig: { temperature: 0.1, maxOutputTokens: 2048 },
+  };
+
+  const res = await fetch(`${GEMINI_URL}?key=${apiKey}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => res.statusText);
+    throw new Error(`Gemini API Fehler ${res.status}: ${errText}`);
+  }
+
+  const json = await res.json() as {
+    candidates?: { content?: { parts?: { text?: string }[] } }[];
+  };
+
+  const raw = json.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
   const jsonMatch = raw.trim().match(/\[[\s\S]*\]/);
   if (!jsonMatch) throw new Error("Gemini hat kein gültiges JSON zurückgegeben.");
   return JSON.parse(jsonMatch[0]) as ExtractedTask[];
 }
 
 export async function extractTasksFromText(text: string): Promise<ExtractedTask[]> {
-  const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
-  if (!apiKey) throw new Error("GOOGLE_GEMINI_API_KEY nicht konfiguriert.");
-
   try {
-    // Dynamic import prevents top-level module issues in the server bundle
-    const { GoogleGenerativeAI } = await import("@google/generative-ai");
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-    const result = await model.generateContent([
-      SYSTEM_PROMPT,
-      "\n\nZu analysierender Text:\n",
-      text,
+    return await callGemini([
+      { text: SYSTEM_PROMPT },
+      { text: "\n\nZu analysierender Text:\n" + text },
     ]);
-
-    return parseGeminiResponse(result.response.text());
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     throw new Error(`KI-Analyse fehlgeschlagen: ${msg}`);
@@ -59,22 +77,13 @@ export async function extractTasksFromImage(
   mimeType: string,
   extraText?: string
 ): Promise<ExtractedTask[]> {
-  const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
-  if (!apiKey) throw new Error("GOOGLE_GEMINI_API_KEY nicht konfiguriert.");
-
   try {
-    const { GoogleGenerativeAI } = await import("@google/generative-ai");
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-    const parts: Parameters<typeof model.generateContent>[0] = [
-      SYSTEM_PROMPT,
-      ...(extraText ? ["\n\nZusätzlicher Kontext: " + extraText] : []),
-      { inlineData: { data: base64Data, mimeType } },
+    const parts: { text?: string; inlineData?: { mimeType: string; data: string } }[] = [
+      { text: SYSTEM_PROMPT },
+      ...(extraText ? [{ text: "\n\nZusätzlicher Kontext: " + extraText }] : []),
+      { inlineData: { mimeType, data: base64Data } },
     ];
-
-    const result = await model.generateContent(parts);
-    return parseGeminiResponse(result.response.text());
+    return await callGemini(parts);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     throw new Error(`KI-Analyse fehlgeschlagen: ${msg}`);
