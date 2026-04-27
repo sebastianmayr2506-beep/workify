@@ -57,6 +57,17 @@ export async function getOpenQuestionsForMeeting(customerId: string) {
   return (data ?? []).map((q) => ({ ...q, tasks: null }));
 }
 
+export async function getAllQuestions() {
+  const { supabase, user } = await getUser();
+  const { data, error } = await supabase
+    .from("questions")
+    .select("id, user_id, customer_id, task_id, meeting_id, direction, assigned_to, question, answer, status, ask_at_next_meeting, asked_at, created_at, updated_at, customers(id, name)")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function getOpenQuestionsCount() {
   const { supabase, user } = await getUser();
   const { count, error } = await supabase
