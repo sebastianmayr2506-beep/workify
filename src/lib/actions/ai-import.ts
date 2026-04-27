@@ -31,19 +31,24 @@ export async function extractTasksFromText(text: string): Promise<ExtractedTask[
   const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
   if (!apiKey) throw new Error("GOOGLE_GEMINI_API_KEY nicht konfiguriert.");
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  try {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-  const result = await model.generateContent([
-    SYSTEM_PROMPT,
-    "\n\nZu analysierender Text:\n",
-    text,
-  ]);
+    const result = await model.generateContent([
+      SYSTEM_PROMPT,
+      "\n\nZu analysierender Text:\n",
+      text,
+    ]);
 
-  const raw = result.response.text().trim();
-  const jsonMatch = raw.match(/\[[\s\S]*\]/);
-  if (!jsonMatch) throw new Error("Gemini hat kein gültiges JSON zurückgegeben.");
-  return JSON.parse(jsonMatch[0]) as ExtractedTask[];
+    const raw = result.response.text().trim();
+    const jsonMatch = raw.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) throw new Error("Gemini hat kein gültiges JSON zurückgegeben.");
+    return JSON.parse(jsonMatch[0]) as ExtractedTask[];
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(`KI-Analyse fehlgeschlagen: ${msg}`);
+  }
 }
 
 export async function extractTasksFromImage(
@@ -54,18 +59,23 @@ export async function extractTasksFromImage(
   const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
   if (!apiKey) throw new Error("GOOGLE_GEMINI_API_KEY nicht konfiguriert.");
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  try {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-  const parts: Parameters<typeof model.generateContent>[0] = [
-    SYSTEM_PROMPT,
-    ...(extraText ? ["\n\nZusätzlicher Kontext: " + extraText] : []),
-    { inlineData: { data: base64Data, mimeType } },
-  ];
+    const parts: Parameters<typeof model.generateContent>[0] = [
+      SYSTEM_PROMPT,
+      ...(extraText ? ["\n\nZusätzlicher Kontext: " + extraText] : []),
+      { inlineData: { data: base64Data, mimeType } },
+    ];
 
-  const result = await model.generateContent(parts);
-  const raw = result.response.text().trim();
-  const jsonMatch = raw.match(/\[[\s\S]*\]/);
-  if (!jsonMatch) throw new Error("Gemini hat kein gültiges JSON zurückgegeben.");
-  return JSON.parse(jsonMatch[0]) as ExtractedTask[];
+    const result = await model.generateContent(parts);
+    const raw = result.response.text().trim();
+    const jsonMatch = raw.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) throw new Error("Gemini hat kein gültiges JSON zurückgegeben.");
+    return JSON.parse(jsonMatch[0]) as ExtractedTask[];
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(`KI-Analyse fehlgeschlagen: ${msg}`);
+  }
 }

@@ -110,7 +110,7 @@ export function AiImportDialog({ customers, open, onOpenChange }: Props) {
         let tasks: ExtractedTask[];
         if (mode === "image" && imageFile) {
           const base64 = await fileToBase64(imageFile);
-          tasks = await extractTasksFromImage(base64, imageFile.type, extraContext || undefined);
+          tasks = await extractTasksFromImage(base64, "image/jpeg", extraContext || undefined);
         } else {
           if (!text.trim()) { setError("Bitte Text eingeben."); return; }
           tasks = await extractTasksFromText(text.trim());
@@ -404,8 +404,33 @@ export function AiImportDialog({ customers, open, onOpenChange }: Props) {
   );
 }
 
-// Helper: File → base64 (without data URL prefix)
+// Helper: compress + resize image, return base64 without data URL prefix
 function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      const MAX = 1280;
+      let { width, height } = img;
+      if (width > MAX || height > MAX) {
+        if (width > height) { height = Math.round((height * MAX) / width); width = MAX; }
+        else { width = Math.round((width * MAX) / height); height = MAX; }
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+      resolve(dataUrl.split(",")[1]);
+    };
+    img.onerror = reject;
+    img.src = objectUrl;
+  });
+}
+
+// Legacy helper kept for reference (unused)
+function _fileToBase64Raw(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
