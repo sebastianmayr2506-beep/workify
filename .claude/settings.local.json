@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm create *)",
+      "Bash(npm --version)",
+      "Bash(npm install *)",
+      "Bash(curl -fsSL https://get.pnpm.io/install.sh)",
+      "Bash(sh -)",
+      "Bash(export PNPM_HOME=\"/Users/Sebi/Library/pnpm\")",
+      "Bash(export PATH=\"$PNPM_HOME:$PATH\")",
+      "Bash(pnpm --version)",
+      "Bash(cp -r /Users/Sebi/workify/. \"/Users/Sebi/To Do App \\(Work\\)/\")",
+      "Bash(rm -rf /Users/Sebi/workify)",
+      "Bash(pnpm dlx *)",
+      "Bash(pnpm add *)",
+      "Bash(pnpm tsc *)",
+      "Bash(pnpm build *)",
+      "Bash(NEXT_PUBLIC_SUPABASE_URL=https://placeholder.supabase.co NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder NEXT_PUBLIC_APP_URL=http://localhost:3000 pnpm build)",
+      "Bash(supabase --version)",
+      "Bash(curl -s https://api.supabase.com/v1/projects/nrrijqoqigtqztqxmefu/types/typescript -H 'Authorization: Bearer __CMDSUB_OUTPUT__')",
+      "Bash(npx supabase@latest gen types typescript --project-id nrrijqoqigtqztqxmefu)",
+      "Bash(git init *)",
+      "Bash(git add *)"
+    ]
+  }
+}
