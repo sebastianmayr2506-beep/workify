@@ -111,7 +111,11 @@ export function TaskForm({ taskId, defaultCustomerId, defaultProjectId, defaultV
       {projects.length > 0 && (
         <div className="space-y-2">
           <Label>Projekt</Label>
-          <Select value={projectId} onValueChange={(v) => setProjectId(v ?? "")}>
+          <Select
+            value={projectId}
+            onValueChange={(v) => setProjectId(v ?? "")}
+            items={{ "": "Kein Projekt", ...Object.fromEntries(projects.map((p) => [p.id, p.name])) }}
+          >
             <SelectTrigger><SelectValue placeholder="Kein Projekt" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="">Kein Projekt</SelectItem>

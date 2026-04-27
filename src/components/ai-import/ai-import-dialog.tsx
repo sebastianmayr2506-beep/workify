@@ -369,6 +369,7 @@ export function AiImportDialog({ customers, open, onOpenChange }: Props) {
                   <Select
                     value={customerId}
                     onValueChange={(v) => { if (v) { setCustomerId(v); loadProjects(v); } }}
+                    items={Object.fromEntries(customers.map((c) => [c.id, c.name]))}
                   >
                     <SelectTrigger className="h-8 text-sm">
                       <SelectValue placeholder="Kunde wählen …" />
@@ -386,6 +387,7 @@ export function AiImportDialog({ customers, open, onOpenChange }: Props) {
                     value={projectId}
                     onValueChange={(v) => setProjectId(v ?? "")}
                     disabled={!customerId || loadingProjects || projects.length === 0}
+                    items={Object.fromEntries(projects.map((p) => [p.id, p.name]))}
                   >
                     <SelectTrigger className="h-8 text-sm">
                       <SelectValue placeholder={loadingProjects ? "Lädt …" : projects.length === 0 ? "Kein Projekt" : "Projekt wählen"} />

@@ -239,7 +239,11 @@ export function TemplatesList({ templates: initialTemplates }: Props) {
             </div>
             <div className="space-y-1.5">
               <Label>Standard-Kunde</Label>
-              <Select value={form.default_customer_id} onValueChange={(v) => setForm((f) => ({ ...f, default_customer_id: v ?? "", default_project_id: "" }))}>
+              <Select
+                value={form.default_customer_id}
+                onValueChange={(v) => setForm((f) => ({ ...f, default_customer_id: v ?? "", default_project_id: "" }))}
+                items={{ "": "Keiner", ...Object.fromEntries(customers.map((c) => [c.id, c.name])) }}
+              >
                 <SelectTrigger><SelectValue placeholder="Keiner" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">Keiner</SelectItem>
@@ -250,7 +254,11 @@ export function TemplatesList({ templates: initialTemplates }: Props) {
             {projects.length > 0 && (
               <div className="space-y-1.5">
                 <Label>Standard-Projekt</Label>
-                <Select value={form.default_project_id} onValueChange={(v) => setForm((f) => ({ ...f, default_project_id: v ?? "" }))}>
+                <Select
+                  value={form.default_project_id}
+                  onValueChange={(v) => setForm((f) => ({ ...f, default_project_id: v ?? "" }))}
+                  items={{ "": "Kein Projekt", ...Object.fromEntries(projects.map((p) => [p.id, p.name])) }}
+                >
                   <SelectTrigger><SelectValue placeholder="Kein Projekt" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">Kein Projekt</SelectItem>
