@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-const GEMINI_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 const SYSTEM_PROMPT = `Du bist ein Aufgaben-Extraktions-Assistent für eine Projektmanagement-App.
 Analysiere den bereitgestellten Text oder das Bild und extrahiere alle umsetzbaren Aufgaben (Tasks).
@@ -77,8 +77,20 @@ export async function POST(req: NextRequest) {
 
   if (!geminiRes.ok) {
     const errText = await geminiRes.text().catch(() => geminiRes.statusText);
+    // Try to extract a clean message from Gemini's error JSON
+    let cleanMsg = errText;
+    try {
+      const parsed = JSON.parse(errText) as { error?: { message?: string; status?: string } };
+      if (parsed.error?.message) {
+        const firstLine = parsed.error.message.split("\n")[0].trim();
+        cleanMsg = parsed.error.status ? `${parsed.error.status}: ${firstLine}` : firstLine;
+      }
+    } catch {
+      // Fall back to raw text, truncated
+      if (cleanMsg.length > 300) cleanMsg = cleanMsg.slice(0, 300) + "…";
+    }
     return NextResponse.json(
-      { error: `Gemini API Fehler ${geminiRes.status}: ${errText}` },
+      { error: `Gemini API Fehler ${geminiRes.status} (Modell ${GEMINI_MODEL}): ${cleanMsg}` },
       { status: 502 }
     );
   }

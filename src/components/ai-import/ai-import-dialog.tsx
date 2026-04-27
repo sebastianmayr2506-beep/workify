@@ -276,9 +276,9 @@ export function AiImportDialog({ customers, open, onOpenChange }: Props) {
             )}
 
             {error && (
-              <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2">
-                <AlertCircle className="h-4 w-4 shrink-0" />
-                {error}
+              <div className="flex items-start gap-2 text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2 max-h-40 overflow-y-auto">
+                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                <span className="break-words min-w-0">{error}</span>
               </div>
             )}
 
