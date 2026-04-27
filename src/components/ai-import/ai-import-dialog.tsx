@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useTransition, useCallback } from "react";
+import { useState, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles, Upload, X, Loader2, CheckCircle2, AlertCircle, ImageIcon, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,8 +11,13 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { extractTasksFromText, extractTasksFromImage, type ExtractedTask } from "@/lib/actions/ai-import";
 import { createTask } from "@/lib/actions/tasks";
+
+export interface ExtractedTask {
+  title: string;
+  description: string;
+  priority: "low" | "medium" | "high" | "urgent";
+}
 import { cn } from "@/lib/utils";
 
 interface CustomerOption { id: string; name: string }
@@ -107,14 +112,29 @@ export function AiImportDialog({ customers, open, onOpenChange }: Props) {
     setError(null);
     startTransition(async () => {
       try {
-        let tasks: ExtractedTask[];
+        let reqBody: Record<string, string>;
         if (mode === "image" && imageFile) {
           const base64 = await fileToBase64(imageFile);
-          tasks = await extractTasksFromImage(base64, "image/jpeg", extraContext || undefined);
+          reqBody = { imageBase64: base64, mimeType: "image/jpeg", extraContext: extraContext || "" };
         } else {
           if (!text.trim()) { setError("Bitte Text eingeben."); return; }
-          tasks = await extractTasksFromText(text.trim());
+          reqBody = { text: text.trim() };
         }
+
+        const res = await fetch("/api/ai-import", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(reqBody),
+        });
+
+        const json = await res.json() as { tasks?: ExtractedTask[]; error?: string };
+
+        if (!res.ok || json.error) {
+          setError(json.error ?? `Server-Fehler ${res.status}`);
+          return;
+        }
+
+        const tasks = json.tasks ?? [];
         if (tasks.length === 0) {
           setError("Keine Aufgaben gefunden. Versuche es mit mehr Details.");
           return;
