@@ -66,6 +66,12 @@ export type Database = {
         Update: { meeting_id?: string; task_id?: string };
         Relationships: [{ foreignKeyName: "meeting_tasks_meeting_id_fkey"; columns: ["meeting_id"]; isOneToOne: false; referencedRelation: "meetings"; referencedColumns: ["id"] }, { foreignKeyName: "meeting_tasks_task_id_fkey"; columns: ["task_id"]; isOneToOne: false; referencedRelation: "tasks"; referencedColumns: ["id"] }];
       };
+      task_checklist_items: {
+        Row: { id: string; user_id: string; task_id: string; content: string; is_done: boolean; sort_order: number; created_at: string; updated_at: string };
+        Insert: { id?: string; user_id: string; task_id: string; content: string; is_done?: boolean; sort_order?: number; created_at?: string; updated_at?: string };
+        Update: { content?: string; is_done?: boolean; sort_order?: number; updated_at?: string };
+        Relationships: [{ foreignKeyName: "task_checklist_items_task_id_fkey"; columns: ["task_id"]; isOneToOne: false; referencedRelation: "tasks"; referencedColumns: ["id"] }];
+      };
       task_templates: {
         Row: { id: string; user_id: string; name: string; default_title: string | null; default_description: string | null; default_priority: Database["public"]["Enums"]["task_priority"] | null; default_customer_id: string | null; default_project_id: string | null; created_at: string; updated_at: string };
         Insert: { id?: string; user_id: string; name: string; default_title?: string | null; default_description?: string | null; default_priority?: Database["public"]["Enums"]["task_priority"] | null; default_customer_id?: string | null; default_project_id?: string | null; created_at?: string; updated_at?: string };

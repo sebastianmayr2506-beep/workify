@@ -4,6 +4,8 @@ import { getTask } from "@/lib/actions/tasks";
 import { getNotesByTask } from "@/lib/actions/notes";
 import { getQuestionsByTask } from "@/lib/actions/questions";
 import { getTimeEntriesByTask, getRunningTimer } from "@/lib/actions/time-entries";
+import { getChecklistByTask } from "@/lib/actions/checklist";
+import { Checklist } from "@/components/checklist/checklist";
 import { TaskStatusBadge } from "@/components/shared/status-badge";
 import { PriorityBadge } from "@/components/shared/priority-badge";
 import { TaskStatusSelect } from "@/components/tasks/task-status-select";
@@ -16,12 +18,13 @@ import { Badge } from "@/components/ui/badge";
 
 export default async function TaskDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [task, notes, questions, timeEntries, runningTimer] = await Promise.all([
+  const [task, notes, questions, timeEntries, runningTimer, checklist] = await Promise.all([
     getTask(id).catch(() => null),
     getNotesByTask(id).catch(() => []),
     getQuestionsByTask(id).catch(() => []),
     getTimeEntriesByTask(id).catch(() => []),
     getRunningTimer().catch(() => null),
+    getChecklistByTask(id).catch(() => []),
   ]);
 
   if (!task) notFound();
@@ -73,6 +76,12 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
           <p className="text-sm whitespace-pre-wrap">{task.description}</p>
         </div>
       )}
+
+      {/* Checklist */}
+      <section className="space-y-3">
+        <h2 className="text-base font-semibold">Schritte</h2>
+        <Checklist taskId={id} initialItems={checklist} />
+      </section>
 
       {/* Time Tracking */}
       <section className="space-y-3">
