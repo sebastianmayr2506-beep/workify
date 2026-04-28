@@ -41,43 +41,45 @@ export interface DashboardProject {
 }
 
 /**
- * Get ALL tasks for the user (excluding done by default unless explicitly requested).
- * Includes customer + project names + accumulated time.
+ * Get ALL tasks for the user. Optimized for dashboard:
+ * - Done tasks: only last 60 days (avoid loading thousands of historical tasks)
+ * - Time aggregation: only for non-done tasks (where the user actually needs to see "Zeit")
  */
 export async function getAllTasks(opts?: { includeDone?: boolean }): Promise<DashboardTask[]> {
   const { supabase, user } = await getUser();
 
   let query = supabase
     .from("tasks")
-    .select("id, title, description, status, priority, due_date, half_billing, customer_id, project_id, customers(id, name), projects(id, name)")
+    .select("id, title, description, status, priority, due_date, half_billing, customer_id, project_id, completed_at, customers(id, name), projects(id, name)")
     .eq("user_id", user.id);
 
   if (!opts?.includeDone) {
     query = query.neq("status", "done");
+  } else {
+    // Limit done tasks to last 60 days
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 60);
+    const cutoffIso = cutoff.toISOString();
+    query = query.or(`status.neq.done,completed_at.gte.${cutoffIso}`);
   }
 
   const { data: tasks, error } = await query.order("created_at", { ascending: false });
   if (error) throw error;
 
-  // Fetch time entries for all these tasks in one query
-  const taskIds = (tasks ?? []).map((t) => t.id);
-  let timeMap: Record<string, { total: number; running: boolean }> = {};
-  if (taskIds.length > 0) {
+  // Time aggregation only for non-done tasks (much smaller working set)
+  const activeTaskIds = (tasks ?? []).filter((t) => t.status !== "done").map((t) => t.id);
+  let timeMap: Record<string, number> = {};
+  if (activeTaskIds.length > 0) {
     const { data: entries } = await supabase
       .from("time_entries")
       .select("task_id, started_at, ended_at")
       .eq("user_id", user.id)
-      .in("task_id", taskIds);
+      .in("task_id", activeTaskIds)
+      .not("ended_at", "is", null);
 
-    timeMap = (entries ?? []).reduce<Record<string, { total: number; running: boolean }>>((acc, e) => {
-      if (!acc[e.task_id]) acc[e.task_id] = { total: 0, running: false };
-      if (e.ended_at) {
-        acc[e.task_id].total += Math.floor(
-          (new Date(e.ended_at).getTime() - new Date(e.started_at).getTime()) / 60000
-        );
-      } else {
-        acc[e.task_id].running = true;
-      }
+    timeMap = (entries ?? []).reduce<Record<string, number>>((acc, e) => {
+      const mins = Math.floor((new Date(e.ended_at!).getTime() - new Date(e.started_at).getTime()) / 60000);
+      acc[e.task_id] = (acc[e.task_id] ?? 0) + mins;
       return acc;
     }, {});
   }
@@ -85,7 +87,6 @@ export async function getAllTasks(opts?: { includeDone?: boolean }): Promise<Das
   return (tasks ?? []).map((t) => {
     const customer = t.customers as { id: string; name: string } | null;
     const project = t.projects as { id: string; name: string } | null;
-    const time = timeMap[t.id] ?? { total: 0, running: false };
     return {
       id: t.id,
       title: t.title,
@@ -98,8 +99,8 @@ export async function getAllTasks(opts?: { includeDone?: boolean }): Promise<Das
       project_id: t.project_id,
       customer_name: customer?.name ?? null,
       project_name: project?.name ?? null,
-      total_minutes: time.total,
-      has_running_timer: time.running,
+      total_minutes: timeMap[t.id] ?? 0,
+      has_running_timer: false, // computed from runningTimer prop in the view
     };
   });
 }
